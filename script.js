@@ -97,33 +97,6 @@ wallTex.wrapT = THREE.RepeatWrapping;
   scene.add(floor);
 }
 
-// {
-//   const material = new THREE.MeshBasicMaterial({ map: wallTex });
-//   const wallRight = new THREE.Mesh(wallGeometry, material);
-//   wallRight.rotateY(-Math.PI / 2);
-//   wallRight.position.x = WALL_POSITION / 2;
-//   wallRight.position.y = WALL_HEIGHT / 2;
-//   scene.add(wallRight);
-// }
-
-// {
-//   const material = new THREE.MeshBasicMaterial({ map: wallTex });
-//   const wallLeft = new THREE.Mesh(wallGeometry, material);
-//   wallLeft.rotateY(Math.PI / 2);
-//   wallLeft.position.x = -WALL_POSITION / 2;
-//   wallLeft.position.y = WALL_HEIGHT / 2;
-//   scene.add(wallLeft);
-// }
-
-// {
-//   const material = new THREE.MeshBasicMaterial({ map: wallTex });
-//   const wallFront = new THREE.Mesh(wallGeometry, material);
-//   wallFront.rotateY(-Math.PI);
-//   wallFront.position.z = WALL_POSITION / 2;
-//   wallFront.position.y = WALL_HEIGHT / 2;
-//   scene.add(wallFront);
-// }
-
 {
   const material = new THREE.MeshBasicMaterial({ map: wallTex });
   const wallBack = new THREE.Mesh(wallGeometry, material);
