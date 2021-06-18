@@ -1,4 +1,5 @@
 const WALL_POSITION = 10;
+const WALL_HEIGHT = 4;
 
 import * as THREE from 'https://cdn.skypack.dev/three@latest';
 import { VRButton } from 'https://cdn.skypack.dev/three@latest/examples/jsm/webxr/VRButton.js';
@@ -20,11 +21,11 @@ const controllerModelFactory = new XRControllerModelFactory();
 const controllerGrip1 = renderer.xr.getControllerGrip(0);
 const controllerGrip2 = renderer.xr.getControllerGrip(1);
 
-const model1 = controllerModelFactory.createControllerModel( controllerGrip1 );
+const model1 = controllerModelFactory.createControllerModel(controllerGrip1);
 controllerGrip1.add(model1);
 scene.add(controllerGrip1);
 
-const model2 = controllerModelFactory.createControllerModel( controllerGrip2 );
+const model2 = controllerModelFactory.createControllerModel(controllerGrip2);
 controllerGrip2.add(model2);
 scene.add(controllerGrip2);
 
@@ -52,7 +53,8 @@ scene.add(dolly);
 
 // prison walls
 const textureLoader = new THREE.TextureLoader();
-const roomGeometry = new THREE.PlaneGeometry(WALL_POSITION, WALL_POSITION);
+const wallGeometry = new THREE.PlaneGeometry(WALL_POSITION, WALL_HEIGHT);
+const floorGeometry = new THREE.PlaneGeometry(WALL_POSITION, WALL_POSITION);
 const wallTex = textureLoader.load('/assets/wall.jpeg');
 wallTex.repeat.set(5, 5);
 wallTex.wrapS = THREE.RepeatWrapping;
@@ -65,50 +67,50 @@ wallTex.wrapT = THREE.RepeatWrapping;
   floorTex.wrapT = THREE.RepeatWrapping;
 
   const material = new THREE.MeshBasicMaterial({ map: floorTex });
-  const floor = new THREE.Mesh(roomGeometry, material);
+  const floor = new THREE.Mesh(floorGeometry, material);
   floor.rotateX(-Math.PI / 2);
   scene.add(floor);
 }
 
 {
   const material = new THREE.MeshBasicMaterial({ map: wallTex });
-  const wallRight = new THREE.Mesh(roomGeometry, material);
+  const wallRight = new THREE.Mesh(wallGeometry, material);
   wallRight.rotateY(-Math.PI / 2);
   wallRight.position.x = WALL_POSITION / 2;
-  wallRight.position.y = WALL_POSITION / 2;
+  wallRight.position.y = WALL_HEIGHT / 2;
   scene.add(wallRight);
 }
 
 {
   const material = new THREE.MeshBasicMaterial({ map: wallTex });
-  const wallLeft = new THREE.Mesh(roomGeometry, material);
+  const wallLeft = new THREE.Mesh(wallGeometry, material);
   wallLeft.rotateY(Math.PI / 2);
   wallLeft.position.x = -WALL_POSITION / 2;
-  wallLeft.position.y = WALL_POSITION / 2;
+  wallLeft.position.y = WALL_HEIGHT / 2;
   scene.add(wallLeft);
 }
 
 {
   const material = new THREE.MeshBasicMaterial({ map: wallTex });
-  const wallFront = new THREE.Mesh(roomGeometry, material);
+  const wallFront = new THREE.Mesh(wallGeometry, material);
   wallFront.rotateY(-Math.PI);
   wallFront.position.z = WALL_POSITION / 2;
-  wallFront.position.y = WALL_POSITION / 2;
+  wallFront.position.y = WALL_HEIGHT / 2;
   scene.add(wallFront);
 }
 
 {
   const material = new THREE.MeshBasicMaterial({ map: wallTex });
-  const wallBack = new THREE.Mesh(roomGeometry, material);
+  const wallBack = new THREE.Mesh(wallGeometry, material);
   wallBack.position.z = -WALL_POSITION / 2;
-  wallBack.position.y = WALL_POSITION / 2;
+  wallBack.position.y = WALL_HEIGHT / 2;
   scene.add(wallBack);
 }
 
-renderer.xr.getController(0).addEventListener('squeezestart', () => moving = true);
-renderer.xr.getController(0).addEventListener('squeezeend', () => moving = false);
+renderer.xr.getController(0).addEventListener('squeezestart', () => (moving = true));
+renderer.xr.getController(0).addEventListener('squeezeend', () => (moving = false));
 
 renderer.setAnimationLoop(() => {
   camera.rotation.y += 0.004;
-	renderer.render(scene, camera);
+  renderer.render(scene, camera);
 });
