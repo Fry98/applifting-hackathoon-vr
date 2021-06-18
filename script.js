@@ -80,14 +80,14 @@ scene.add(dolly);
 const textureLoader = new THREE.TextureLoader();
 const wallGeometry = new THREE.PlaneGeometry(WALL_POSITION, WALL_HEIGHT);
 const floorGeometry = new THREE.PlaneGeometry(WALL_POSITION, WALL_POSITION);
-const wallTex = textureLoader.load('/assets/wall.jpeg');
-wallTex.repeat.set(5, 5);
+const wallTex = textureLoader.load('/assets/wall2.jpg');
+wallTex.repeat.set(5, 3);
 wallTex.wrapS = THREE.RepeatWrapping;
 wallTex.wrapT = THREE.RepeatWrapping;
 
 {
-  const floorTex = textureLoader.load('/assets/asphalt.jpg');
-  floorTex.repeat.set(3, 3);
+  const floorTex = textureLoader.load('/assets/asphalt2.jpg');
+  floorTex.repeat.set(5, 5);
   floorTex.wrapS = THREE.RepeatWrapping;
   floorTex.wrapT = THREE.RepeatWrapping;
 
