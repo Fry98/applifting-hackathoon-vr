@@ -1,3 +1,5 @@
+const WALL_POSITION = 15;
+
 import * as THREE from 'https://cdn.skypack.dev/three@latest';
 import { VRButton } from 'https://cdn.skypack.dev/three@latest/examples/jsm/webxr/VRButton.js';
 import { XRControllerModelFactory } from 'https://cdn.skypack.dev/three@latest/examples/jsm/webxr/XRControllerModelFactory.js';
@@ -48,13 +50,52 @@ const dolly = new THREE.Object3D();
 dolly.add(camera);
 scene.add(dolly);
 
-const planeTex = THREE.ImageUtils.loadTexture( "/assets/asphalt.jpg" );
-const planeGeo = new THREE.PlaneGeometry(20, 20);
-const planeMaterial = new THREE.MeshLambertMaterial({ map: planeTex });
-const plane = new THREE.Mesh( planeGeo, planeMaterial );
-plane.rotation.x = Math.PI / 2;
-plane.material.side = THREE.DoubleSide;
-scene.add( plane );
+// prison walls
+const textureLoader = new THREE.TextureLoader();
+const roomGeometry = new THREE.PlaneGeometry(WALL_POSITION, WALL_POSITION);
+
+{
+  const material = new THREE.MeshBasicMaterial({ map: textureLoader.load('/assets/asphalt.jpg') });
+  const floor = new THREE.Mesh(roomGeometry, material);
+  floor.rotateX(-Math.PI / 2);
+  scene.add(floor);
+}
+
+{
+  const material = new THREE.MeshBasicMaterial({ map: textureLoader.load('/assets/wall.jpeg'), side: THREE.DoubleSide });
+  const wallLeft = new THREE.Mesh(roomGeometry, material);
+  wallLeft.rotateY(-Math.PI / 2);
+  wallLeft.position.x = -WALL_POSITION / 2;
+  wallLeft.position.y = WALL_POSITION / 2;
+  scene.add(wallLeft);
+}
+
+{
+  const material = new THREE.MeshBasicMaterial({ map: textureLoader.load('/assets/wall.jpeg'), side: THREE.DoubleSide });
+  const wallRight = new THREE.Mesh(roomGeometry, material);
+  wallRight.rotateY(-Math.PI / 2);
+  wallRight.position.x = WALL_POSITION / 2;
+  wallRight.position.y = WALL_POSITION / 2;
+  scene.add(wallRight);
+}
+
+{
+  const material = new THREE.MeshBasicMaterial({ map: textureLoader.load('/assets/wall.jpeg'), side: THREE.DoubleSide });
+  const wallFront = new THREE.Mesh(roomGeometry, material);
+  wallFront.rotateY(-Math.PI);
+  wallFront.position.z = WALL_POSITION / 2;
+  wallFront.position.y = WALL_POSITION / 2;
+  scene.add(wallFront);
+}
+
+{
+  const material = new THREE.MeshBasicMaterial({ map: textureLoader.load('/assets/wall.jpeg'), side: THREE.DoubleSide });
+  const wallBack = new THREE.Mesh(roomGeometry, material);
+  wallBack.rotateY(-Math.PI);
+  wallBack.position.z = -WALL_POSITION / 2;
+  wallBack.position.y = WALL_POSITION / 2;
+  scene.add(wallBack);
+}
 
 renderer.xr.getController(0).addEventListener('squeezestart', () => moving = true);
 renderer.xr.getController(0).addEventListener('squeezeend', () => moving = false);
