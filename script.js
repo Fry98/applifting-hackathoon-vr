@@ -19,12 +19,16 @@ renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild( renderer.domElement );
 
 const geometry = new THREE.BoxGeometry();
-const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+const material = new THREE.MeshPhongMaterial( { color: 0x00ff00 } );
 const cube = new THREE.Mesh(geometry, material);
 scene.add(cube);
 
-const light = new THREE.AmbientLight(0x400000, 0.4);
+const light = new THREE.AmbientLight(0x404040);
 scene.add(light);
+
+const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0);
+directionalLight.position.z = 1;
+scene.add(directionalLight);
 
 camera.position.z = 5;
 requestAnimationFrame(draw);
