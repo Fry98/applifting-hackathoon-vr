@@ -4,6 +4,7 @@ const WALL_HEIGHT = 4;
 import * as THREE from 'https://cdn.skypack.dev/three@latest';
 import { VRButton } from 'https://cdn.skypack.dev/three@latest/examples/jsm/webxr/VRButton.js';
 import { XRControllerModelFactory } from 'https://cdn.skypack.dev/three@latest/examples/jsm/webxr/XRControllerModelFactory.js';
+import { GLTFLoader } from 'https://cdn.skypack.dev/three@latest/examples/jsm/loaders/GLTFLoader.js';
 
 let moving = false;
 
@@ -22,8 +23,32 @@ const controllerGrip1 = renderer.xr.getControllerGrip(0);
 const controllerGrip2 = renderer.xr.getControllerGrip(1);
 
 const model1 = controllerModelFactory.createControllerModel(controllerGrip1);
+// sprayer
+{
+  const gltfLoader = new GLTFLoader();
+  gltfLoader.load('/assets/can.glb', (gltf) => {
+    const model = gltf.scene;
+    const size = 0.05;
+    model.scale.set(size, size, size);
+    model1.add(model);
+  });
+}
 controllerGrip1.add(model1);
 scene.add(controllerGrip1);
+
+// const model1 = controllerModelFactory.createControllerModel(controllerGrip1);
+// controllerGrip1.add(model1);
+// scene.add(controllerGrip1);
+// // sprayer
+// {
+//   const gltfLoader = new GLTFLoader();
+//   gltfLoader.load('/assets/can.glb', (gltf) => {
+//     const model = gltf.scene;
+//     const size = 0.05;
+//     model.scale.set(size, size, size);
+//     scene.add(model);
+//   });
+// }
 
 const model2 = controllerModelFactory.createControllerModel(controllerGrip2);
 controllerGrip2.add(model2);
