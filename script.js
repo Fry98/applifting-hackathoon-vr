@@ -39,15 +39,13 @@ const texture = loader.load([
 ]);
 scene.background = texture;
 
-// const light = new THREE.AmbientLight(0x404040);
-// scene.add(light);
-
-// const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0);
-// directionalLight.position.z = 1;
-// scene.add(directionalLight);
+const light = new THREE.AmbientLight(0xffffff);
+scene.add(light);
 
 const dolly = new THREE.Object3D();
 dolly.add(camera);
+dolly.add(controllerGrip1);
+dolly.add(controllerGrip2);
 scene.add(dolly);
 
 // prison walls
@@ -105,10 +103,20 @@ wallTex.wrapT = THREE.RepeatWrapping;
   scene.add(wallBack);
 }
 
-renderer.xr.getController(0).addEventListener('squeezestart', () => moving = true);
-renderer.xr.getController(0).addEventListener('squeezeend', () => moving = false);
+const controller = renderer.xr.getController(1);
+controller.addEventListener('squeezestart', () => moving = true);
+controller.addEventListener('squeezeend', () => moving = false);
 
 renderer.setAnimationLoop(() => {
+  if (moving) {
+    const dirVec = new THREE.Vector3(0.0, 0.0, -1.0);
+    dirVec.applyQuaternion(controller.quaternion);
+    const mvVec = new THREE.Vector2(dirVec.x, dirVec.z);
+    mvVec.normalize();
+    dolly.position.x += mvVec.x * 0.03;
+    dolly.position.z += mvVec.y * 0.03;
+  }
+
   camera.rotation.y += 0.004;
 	renderer.render(scene, camera);
 });
