@@ -61,15 +61,16 @@ scene.add(dolly);
 // prison walls
 const textureLoader = new THREE.TextureLoader();
 const wallGeometry = new THREE.PlaneGeometry(WALL_POSITION, WALL_HEIGHT);
-const floorGeometry = new THREE.PlaneGeometry(WALL_POSITION, WALL_POSITION);
+const floorGeometry = new THREE.PlaneGeometry(40, 40);
 const wallTex = textureLoader.load('/assets/wall.jpeg');
-wallTex.repeat.set(6, 3);
+
+wallTex.repeat.set(4, 2);
 wallTex.wrapS = THREE.RepeatWrapping;
 wallTex.wrapT = THREE.RepeatWrapping;
 
 {
-  const floorTex = textureLoader.load('/assets/asphalt.jpg');
-  floorTex.repeat.set(3, 3);
+  const floorTex = textureLoader.load('/assets/asphalt2.jpg');
+  floorTex.repeat.set(15, 15);
   floorTex.wrapS = THREE.RepeatWrapping;
   floorTex.wrapT = THREE.RepeatWrapping;
 
@@ -77,33 +78,6 @@ wallTex.wrapT = THREE.RepeatWrapping;
   const floor = new THREE.Mesh(floorGeometry, material);
   floor.rotateX(-Math.PI / 2);
   scene.add(floor);
-}
-
-{
-  const material = new THREE.MeshBasicMaterial({ map: wallTex });
-  const wallRight = new THREE.Mesh(wallGeometry, material);
-  wallRight.rotateY(-Math.PI / 2);
-  wallRight.position.x = WALL_POSITION / 2;
-  wallRight.position.y = WALL_HEIGHT / 2;
-  scene.add(wallRight);
-}
-
-{
-  const material = new THREE.MeshBasicMaterial({ map: wallTex });
-  const wallLeft = new THREE.Mesh(wallGeometry, material);
-  wallLeft.rotateY(Math.PI / 2);
-  wallLeft.position.x = -WALL_POSITION / 2;
-  wallLeft.position.y = WALL_HEIGHT / 2;
-  scene.add(wallLeft);
-}
-
-{
-  const material = new THREE.MeshBasicMaterial({ map: wallTex });
-  const wallFront = new THREE.Mesh(wallGeometry, material);
-  wallFront.rotateY(-Math.PI);
-  wallFront.position.z = WALL_POSITION / 2;
-  wallFront.position.y = WALL_HEIGHT / 2;
-  scene.add(wallFront);
 }
 
 {
@@ -117,6 +91,9 @@ wallTex.wrapT = THREE.RepeatWrapping;
 const controller = renderer.xr.getController(1);
 controller.addEventListener('squeezestart', () => moving = true);
 controller.addEventListener('squeezeend', () => moving = false);
+
+const fog = new THREE.Fog('#c2bbac', 8, 16);
+scene.fog = fog;
 
 renderer.setAnimationLoop(() => {
   if (moving) {
