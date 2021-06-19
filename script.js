@@ -127,7 +127,7 @@ function initCloud(y) {
   const cloud = new THREE.Mesh(cloudGeometry, cloudMaterial);
   cloud.position.y = 40 + y * 1.5;
   cloud.rotation.y = Math.random() * Math.PI;
-  const spread = 150;
+  const spread = 200;
   cloud.position.x = Math.random() * spread - Math.random() * spread;
   cloud.position.z = Math.random() * spread - Math.random() * spread;
   cloud.rotateX(Math.PI / 2);
@@ -165,12 +165,12 @@ renderer.setAnimationLoop(() => {
   camera.rotation.y += 0.004;
 
   // the boundary after which clouds should respawn
-  const spawnDistance = 100; 
+  const spawnDistance = 200; 
 
   // move clouds
   for(const cloud of clouds) {
     if(cloud.cloud.position.x < spawnDistance) {
-      cloud.cloud.position.x += 0.001 * (cloud.y - 10);
+      cloud.cloud.position.x += 0.002 * (cloud.y);
       // seamlessly transition from opacity 0 to opacity 1 and back to 0 when clouds are moving from spawnpoint to despawnpoint
       cloud.cloud.material.opacity = Math.cos(Math.PI * (1/(spawnDistance*2/cloud.cloud.position.x))); 
       cloud.cloud.rotation.z += 0.0003 * cloud.rotationDelta;
