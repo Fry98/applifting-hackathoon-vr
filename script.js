@@ -90,25 +90,34 @@ wallTex.wrapT = THREE.RepeatWrapping;
   scene.add(wallBack);
 }
 
-// const listener = new THREE.AudioListener();
-// camera.add(listener);
-// const sound = new THREE.Audio(listener);
-// const audioLoader = new THREE.AudioLoader();
-// audioLoader.load('/assets/sounds/spray.mp3', function (buffer) {
-//   sound.setBuffer(buffer);
-// });
-//
-// const controllerCan = renderer.xr.getController(1);
-// controllerCan.addEventListener('squeezestart', () => (moving = true));
-// controllerCan.addEventListener('squeezeend', () => (moving = false));
-// controllerCan.addEventListener('selectstart', () => {
-//   sound.setLoop(true);
-//   sound.setVolume(0.5);
-//   sound.play();
-// });
-// controllerCan.addEventListener('selectend', () => {
-//   sound.setLoop(false);
-// });
+const listener = new THREE.AudioListener();
+camera.add(listener);
+const sound = new THREE.Audio(listener);
+sound.setVolume(0.5);
+
+const audioLoader = new THREE.AudioLoader();
+audioLoader.load('/assets/sounds/spray.mp3', function (buffer) {
+  sound.setBuffer(buffer);
+});
+
+const controllerCan = renderer.xr.getController(1);
+controllerCan.addEventListener('squeezestart', () => (moving = true));
+controllerCan.addEventListener('squeezeend', () => (moving = false));
+
+let spraying = false;
+controllerCan.addEventListener('selectstart', () => {
+  spraying = true;
+  sound.setLoop(true);
+  sound.setLoopStart(0.2);
+  sound.setLoopEnd(2);
+  sound.setVolume(0.7);
+  sound.play();
+});
+controllerCan.addEventListener('selectend', () => {
+  sound.setVolume(0);
+  sound.stop();
+  spraying = false;
+});
 
 const controller = renderer.xr.getController(1);
 controller.addEventListener('squeezestart', () => (moving = true));
