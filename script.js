@@ -26,12 +26,13 @@ const oculusModel = controllerModelFactory.createControllerModel(controllerGripW
 controllerGripWheel.add(oculusModel);
 scene.add(controllerGripWheel);
 
-const gltfLoader = new GLTFLoader();
-gltfLoader.load('/assets/can.glb', gltf => {
+const gltfLoader = new GLTFLoader().setPath('/assets/can/');
+gltfLoader.load('scene.gltf', (gltf) => {
   const model = gltf.scene;
-  model.rotateX(-Math.PI / 2);
-  model.translateY(-0.1);
   const size = 0.04;
+  model.rotateX(-Math.PI / 2);
+  model.rotateY(Math.PI / 2);
+  model.translateY(-0.1);
   model.scale.set(size, size, size);
   controllerGripCan.add(model);
 });
@@ -88,9 +89,29 @@ wallTex.wrapT = THREE.RepeatWrapping;
   scene.add(wallBack);
 }
 
+// const listener = new THREE.AudioListener();
+// camera.add(listener);
+// const sound = new THREE.Audio(listener);
+// const audioLoader = new THREE.AudioLoader();
+// audioLoader.load('/assets/sounds/spray.mp3', function (buffer) {
+//   sound.setBuffer(buffer);
+// });
+//
+// const controllerCan = renderer.xr.getController(1);
+// controllerCan.addEventListener('squeezestart', () => (moving = true));
+// controllerCan.addEventListener('squeezeend', () => (moving = false));
+// controllerCan.addEventListener('selectstart', () => {
+//   sound.setLoop(true);
+//   sound.setVolume(0.5);
+//   sound.play();
+// });
+// controllerCan.addEventListener('selectend', () => {
+//   sound.setLoop(false);
+// });
+
 const controller = renderer.xr.getController(1);
-controller.addEventListener('squeezestart', () => moving = true);
-controller.addEventListener('squeezeend', () => moving = false);
+controller.addEventListener('squeezestart', () => (moving = true));
+controller.addEventListener('squeezeend', () => (moving = false));
 
 const fog = new THREE.Fog('#c2bbac', 8, 16);
 scene.fog = fog;
