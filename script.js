@@ -2,6 +2,7 @@ const WALL_WIDTH = 40;
 const WALL_HEIGHT = 5;
 const VEC_UP = new THREE.Vector3(0.0, 1.0, 0.0);
 const VEC_FWD = new THREE.Vector3(0.0, 0.0, -1.0);
+const CLOUDS = true;
 
 import * as THREE from 'https://cdn.skypack.dev/three@latest';
 import { VRButton } from 'https://cdn.skypack.dev/three@latest/examples/jsm/webxr/VRButton.js';
@@ -113,6 +114,67 @@ controllerGripCan.addEventListener('connected', e => {
 const fog = new THREE.Fog('#c2bbac', 5, 25);
 scene.fog = fog;
 
+// // spray particles
+// const sprayParticleTex = textureLoader.load('/assets/cloud.png');
+
+// const sprayParticles = [];
+// function createSprayParticle() {
+//   const sprayMaterial = new THREE.SpriteMaterial({map: sprayParticleTex, transparent: true, opacity: 1});
+//   const sprayParticle = new THREE.Sprite(sprayMaterial);
+//   sprayParticle.position.x = dolly.position.x + controllerCan.position.x;
+//   sprayParticle.position.y = dolly.position.y + controllerCan.position.y;
+//   sprayParticle.position.z = dolly.position.z + controllerCan.position.z;
+//   const initScale = 0.01;
+//   sprayParticle.scale.x = initScale;
+//   sprayParticle.scale.y = initScale;
+//   sprayParticle.scale.x = initScale;
+//   sprayParticle.material.rotation = Math.PI * Math.random();
+//   scene.add(sprayParticle);
+
+//   const moveVector = new THREE.Vector3(1,1,-1);
+//   moveVector.applyQuaternion(controllerCan.quaternion);
+//   moveVector.normalize();
+//   return {object: sprayParticle, live: 1, moveVector }
+// }
+
+// // test
+// createSprayParticle();
+
+// add cloud
+const cloudGeometry = new THREE.PlaneGeometry(1, 1);
+const cloudTex = textureLoader.load('/assets/cloud.png');
+cloudTex.repeat.set(1, 1);
+const cloudMaterial = new THREE.MeshBasicMaterial({ map: cloudTex, transparent: true, depthWrite: false /* important for overlaying meshes */ });
+
+function initCloud(y) {
+  const cloud = new THREE.Mesh(cloudGeometry, cloudMaterial);
+  cloud.position.y = 40 + y * 1.5;
+  cloud.rotation.y = Math.random() * Math.PI;
+  const spread = 200;
+  cloud.position.x = Math.random() * spread - Math.random() * spread;
+  cloud.position.z = Math.random() * spread - Math.random() * spread;
+  cloud.rotateX(Math.PI / 2);
+  cloud.scale.x = 30 + y * 1.5;
+  cloud.scale.y = 30 + y * 1.5;
+  const rotationDelta = Math.random();
+  return {cloud, y, rotationDelta};
+}
+
+function initClouds(numberOfClouds) {
+  // init number of clouds
+  const clouds = [];
+  for(let i = 0; i < numberOfClouds; i++) {
+    clouds.push(initCloud(i));
+    scene.add(clouds[i].cloud);
+  }
+  return clouds;
+}
+
+let clouds = [];
+if(CLOUDS) {
+  clouds = initClouds(30);
+}
+
 renderer.setAnimationLoop(() => {
   if (moving) {
     const target = new THREE.Vector3();
@@ -136,5 +198,41 @@ renderer.setAnimationLoop(() => {
   }
 
   camera.rotation.y += 0.004;
+
+  // the boundary after which clouds should respawn
+  const spawnDistance = 200;
+
+  // move clouds
+  for(const cloud of clouds) {
+    if(cloud.cloud.position.x < spawnDistance) {
+      cloud.cloud.position.x += 0.002 * (cloud.y);
+      // seamlessly transition from opacity 0 to opacity 1 and back to 0 when clouds are moving from spawnpoint to despawnpoint
+      cloud.cloud.material.opacity = Math.cos(Math.PI * (1/(spawnDistance*2/cloud.cloud.position.x)));
+      cloud.cloud.rotation.z += 0.0003 * cloud.rotationDelta;
+    } else {
+      cloud.cloud.position.x -= spawnDistance * 2;
+    }
+  }
+
+  // if(spraying) {
+  //   // if(Math.random() < 0.5) {
+  //     sprayParticles.push(createSprayParticle());
+  //   // }
+  // }
+
+  // for(const sprayParticle of sprayParticles) {
+  //   sprayParticle.object.position.x += 0.03 * sprayParticle.moveVector.x;
+  //   sprayParticle.object.position.y += 0.03 * sprayParticle.moveVector.y;
+  //   sprayParticle.object.position.z += 0.03 * sprayParticle.moveVector.z;
+  //   sprayParticle.object.scale.x += 0.006;
+  //   sprayParticle.object.scale.y += 0.006;
+  //   sprayParticle.object.scale.z += 0.006;
+  //   sprayParticle.live -= 0.03;
+  //   sprayParticle.object.material.opacity = Math.min(1, Math.max(0, sprayParticle.live * sprayParticle.live));
+
+  //   if(sprayParticle.live <= 0) { scene.remove(sprayParticle.object); };
+  // }
+
   renderer.render(scene, camera);
 });
+
