@@ -119,20 +119,20 @@ scene.fog = fog;
 
 // add cloud
 function initCloud(y) {
-  // const cloudGeometry = new THREE.PlaneGeometry(10 + y, 10 + y);
+  const cloudGeometry = new THREE.PlaneGeometry(1, 1);
 
   const cloudTex = textureLoader.load('/assets/cloud.png');
   cloudTex.repeat.set(1, 1);
-  // had to use SpriteMaterial for now to deal with clouds not rendering properly in certain instances
-  const cloudMaterial = new THREE.SpriteMaterial({ map: cloudTex, transparent: true });
-  const cloud = new THREE.Sprite(cloudMaterial);
-  cloud.position.y = 10 + y;
-  const spread = 50;
+  const cloudMaterial = new THREE.MeshBasicMaterial({ map: cloudTex, transparent: true, depthWrite: false /* important for overlaying meshes */ });
+  const cloud = new THREE.Mesh(cloudGeometry, cloudMaterial);
+  cloud.position.y = 40 + y;
+  cloud.rotation.y = Math.random() * Math.PI;
+  const spread = 120;
   cloud.position.x = Math.random() * spread - Math.random() * spread;
   cloud.position.z = Math.random() * spread - Math.random() * spread;
   cloud.rotateX(Math.PI / 2);
-  cloud.scale.x = 10 + y;
-  cloud.scale.y = 10 + y;
+  cloud.scale.x = 15 + y;
+  cloud.scale.y = 15 + y;
   return {cloud, y};
 }
 
@@ -146,9 +146,9 @@ function initClouds(numberOfClouds) {
   return clouds;
 }
 
-const clouds = [];
+let clouds = [];
 if(CLOUDS) {
-  const clouds = initClouds(30);
+  clouds = initClouds(30);
 }
 
 renderer.setAnimationLoop(() => {
@@ -164,14 +164,15 @@ renderer.setAnimationLoop(() => {
   camera.rotation.y += 0.004;
 
   // the boundary after which clouds should respawn
-  const spawnDistance = 40; 
+  const spawnDistance = 100; 
 
   // move clouds
   for(const cloud of clouds) {
     if(cloud.cloud.position.x < spawnDistance) {
-      cloud.cloud.position.x += 0.001 * (cloud.cloud.position.y - 10);
+      cloud.cloud.position.x += 0.001 * (cloud.y - 10);
       // seamlessly transition from opacity 0 to opacity 1 and back to 0 when clouds are moving from spawnpoint to despawnpoint
       cloud.cloud.material.opacity = Math.cos(Math.PI * (1/(spawnDistance*2/cloud.cloud.position.x))); 
+      cloud.cloud.rotation.z += 0.0003;
     } else {
       cloud.cloud.position.x -= spawnDistance * 2;
     }
