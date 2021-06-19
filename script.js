@@ -1,6 +1,7 @@
 const WALL_WIDTH = 40;
 const WALL_HEIGHT = 5;
-const VEC_UP = new THREE.Vector3(0, 1, 0);
+const VEC_UP = new THREE.Vector3(0.0, 1.0, 0.0);
+const VEC_FWD = new THREE.Vector3(0.0, 0.0, -1.0);
 
 import * as THREE from 'https://cdn.skypack.dev/three@latest';
 import { VRButton } from 'https://cdn.skypack.dev/three@latest/examples/jsm/webxr/VRButton.js';
@@ -9,6 +10,9 @@ import { GLTFLoader } from 'https://cdn.skypack.dev/three@latest/examples/jsm/lo
 
 let moving = false;
 let gamepad = null;
+
+const spraySfx = new Audio("/assets/spray.ogg");
+spraySfx.loop = true;
 
 const canvas = document.getElementById('canv');
 const scene = new THREE.Scene();
@@ -72,7 +76,7 @@ wallTex.wrapS = THREE.RepeatWrapping;
 wallTex.wrapT = THREE.RepeatWrapping;
 
 {
-  const floorTex = textureLoader.load('/assets/asphalt2.jpg');
+  const floorTex = textureLoader.load('/assets/asphalt.jpg');
   floorTex.repeat.set(15, 15);
   floorTex.wrapS = THREE.RepeatWrapping;
   floorTex.wrapT = THREE.RepeatWrapping;
@@ -91,29 +95,15 @@ wallTex.wrapT = THREE.RepeatWrapping;
   scene.add(wallBack);
 }
 
-// const listener = new THREE.AudioListener();
-// camera.add(listener);
-// const sound = new THREE.Audio(listener);
-// const audioLoader = new THREE.AudioLoader();
-// audioLoader.load('/assets/sounds/spray.mp3', function (buffer) {
-//   sound.setBuffer(buffer);
-// });
-//
-// const controllerCan = renderer.xr.getController(1);
-// controllerCan.addEventListener('squeezestart', () => (moving = true));
-// controllerCan.addEventListener('squeezeend', () => (moving = false));
-// controllerCan.addEventListener('selectstart', () => {
-//   sound.setLoop(true);
-//   sound.setVolume(0.5);
-//   sound.play();
-// });
-// controllerCan.addEventListener('selectend', () => {
-//   sound.setLoop(false);
-// });
-
 const controller = renderer.xr.getController(1);
 controller.addEventListener('squeezestart', () => (moving = true));
 controller.addEventListener('squeezeend', () => (moving = false));
+controller.addEventListener('selectstart', () => {
+  spraySfx.play();
+});
+controller.addEventListener('selectend', () => {
+  spraySfx.pause();
+});
 
 controllerGripCan.addEventListener('connected', e => {
   if (!e.data.gamepad) return;
@@ -125,18 +115,24 @@ scene.fog = fog;
 
 renderer.setAnimationLoop(() => {
   if (moving) {
-    const dirVec = new THREE.Vector3(0.0, 0.0, -1.0);
-    dirVec.applyQuaternion(controller.quaternion);
-    dirVec.applyAxisAngle(VEC_UP, dolly.rotation.y);
+    const target = new THREE.Vector3();
+    controller.getWorldDirection(target);
+    target.y = 0;
+    target.normalize();
 
-    const mvVec = new THREE.Vector2(dirVec.x, dirVec.z);
-    mvVec.normalize();
-    dolly.position.x += mvVec.x * 0.03;
-    dolly.position.z += mvVec.y * 0.03;
+    const moveVec = VEC_FWD.clone();
+    moveVec.multiplyScalar(target.z);
+    moveVec.addScaledVector(new THREE.Vector3(-VEC_FWD.z, 0, VEC_FWD.x), -target.x);
+    moveVec.normalize();
+
+    dolly.position.x += 0.03 * moveVec.x;
+    dolly.position.z += 0.03 * moveVec.z;
   }
 
   if (gamepad) {
-    dolly.rotateY(-gamepad.axes[2] * 0.02);
+    const angle = -gamepad.axes[2] * 0.02;
+    dolly.rotateY(angle);
+    VEC_FWD.applyAxisAngle(VEC_UP, angle);
   }
 
   camera.rotation.y += 0.004;
