@@ -1,5 +1,6 @@
-const WALL_POSITION = 10;
+const WALL_WIDTH = 40;
 const WALL_HEIGHT = 5;
+const VEC_UP = new THREE.Vector3(0, 1, 0);
 
 import * as THREE from 'https://cdn.skypack.dev/three@latest';
 import { VRButton } from 'https://cdn.skypack.dev/three@latest/examples/jsm/webxr/VRButton.js';
@@ -7,6 +8,7 @@ import { XRControllerModelFactory } from 'https://cdn.skypack.dev/three@latest/e
 import { GLTFLoader } from 'https://cdn.skypack.dev/three@latest/examples/jsm/loaders/GLTFLoader.js';
 
 let moving = false;
+let gamepad = null;
 
 const canvas = document.getElementById('canv');
 const scene = new THREE.Scene();
@@ -54,18 +56,18 @@ const light = new THREE.AmbientLight(0xffffff);
 scene.add(light);
 
 const dolly = new THREE.Object3D();
-dolly.add(camera);
 dolly.add(controllerGripWheel);
 dolly.add(controllerGripCan);
+dolly.add(camera);
 scene.add(dolly);
 
 // prison walls
 const textureLoader = new THREE.TextureLoader();
-const wallGeometry = new THREE.PlaneGeometry(WALL_POSITION, WALL_HEIGHT);
+const wallGeometry = new THREE.PlaneGeometry(WALL_WIDTH, WALL_HEIGHT);
 const floorGeometry = new THREE.PlaneGeometry(40, 40);
 const wallTex = textureLoader.load('/assets/wall.jpeg');
 
-wallTex.repeat.set(4, 2);
+wallTex.repeat.set(32, 4);
 wallTex.wrapS = THREE.RepeatWrapping;
 wallTex.wrapT = THREE.RepeatWrapping;
 
@@ -84,7 +86,7 @@ wallTex.wrapT = THREE.RepeatWrapping;
 {
   const material = new THREE.MeshBasicMaterial({ map: wallTex });
   const wallBack = new THREE.Mesh(wallGeometry, material);
-  wallBack.position.z = -WALL_POSITION / 2;
+  wallBack.position.z = -5;
   wallBack.position.y = WALL_HEIGHT / 2;
   scene.add(wallBack);
 }
@@ -113,17 +115,28 @@ const controller = renderer.xr.getController(1);
 controller.addEventListener('squeezestart', () => (moving = true));
 controller.addEventListener('squeezeend', () => (moving = false));
 
-const fog = new THREE.Fog('#c2bbac', 8, 16);
+controllerGripCan.addEventListener('connected', e => {
+  if (!e.data.gamepad) return;
+  gamepad = e.data.gamepad;
+});
+
+const fog = new THREE.Fog('#c2bbac', 5, 25);
 scene.fog = fog;
 
 renderer.setAnimationLoop(() => {
   if (moving) {
     const dirVec = new THREE.Vector3(0.0, 0.0, -1.0);
     dirVec.applyQuaternion(controller.quaternion);
+    dirVec.applyAxisAngle(VEC_UP, dolly.rotation.y);
+
     const mvVec = new THREE.Vector2(dirVec.x, dirVec.z);
     mvVec.normalize();
     dolly.position.x += mvVec.x * 0.03;
     dolly.position.z += mvVec.y * 0.03;
+  }
+
+  if (gamepad) {
+    dolly.rotateY(-gamepad.axes[2] * 0.02);
   }
 
   camera.rotation.y += 0.004;
