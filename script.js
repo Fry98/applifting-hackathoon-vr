@@ -20,8 +20,8 @@ renderer.xr.enabled = true;
 document.body.appendChild(VRButton.createButton(renderer));
 
 const controllerModelFactory = new XRControllerModelFactory();
-const controllerGripWheel = renderer.xr.getControllerGrip(0);
-const controllerGripCan = renderer.xr.getControllerGrip(1);
+const controllerGripWheel = renderer.xr.getControllerGrip(1);
+const controllerGripCan = renderer.xr.getControllerGrip(0);
 
 const oculusModel = controllerModelFactory.createControllerModel(controllerGripWheel);
 controllerGripWheel.add(oculusModel);
@@ -100,9 +100,7 @@ audioLoader.load('/assets/sounds/spray.mp3', function (buffer) {
   sound.setBuffer(buffer);
 });
 
-const controllerCan = renderer.xr.getController(1);
-controllerCan.addEventListener('squeezestart', () => (moving = true));
-controllerCan.addEventListener('squeezeend', () => (moving = false));
+const controllerCan = renderer.xr.getController(0);
 
 let spraying = false;
 controllerCan.addEventListener('selectstart', () => {
@@ -125,6 +123,34 @@ controller.addEventListener('squeezeend', () => (moving = false));
 
 const fog = new THREE.Fog('#c2bbac', 8, 16);
 scene.fog = fog;
+
+// spray particles
+const sprayParticleTex = textureLoader.load('/assets/cloud.png');
+
+const sprayParticles = [];
+function createSprayParticle() {
+  const sprayMaterial = new THREE.SpriteMaterial({map: sprayParticleTex, transparent: true, opacity: 1});
+  const sprayParticle = new THREE.Sprite(sprayMaterial);
+  sprayParticle.position.x = dolly.position.x + controllerCan.position.x;
+  sprayParticle.position.y = dolly.position.y + controllerCan.position.y;
+  sprayParticle.position.z = dolly.position.z + controllerCan.position.z;
+  const initScale = 0.01;
+  sprayParticle.scale.x = initScale;
+  sprayParticle.scale.y = initScale;
+  sprayParticle.scale.x = initScale;
+  sprayParticle.material.rotation = Math.PI * Math.random();
+  scene.add(sprayParticle);
+
+  const moveVector = new THREE.Vector3(1,1,-1);
+  moveVector.applyQuaternion(controllerCan.quaternion);
+  moveVector.normalize();
+  return {object: sprayParticle, live: 1, moveVector }
+}
+
+// test
+createSprayParticle();
+
+
 
 // add cloud
 const cloudGeometry = new THREE.PlaneGeometry(1, 1);
@@ -188,5 +214,25 @@ renderer.setAnimationLoop(() => {
     }
   } 
 
+  if(spraying) {
+    // if(Math.random() < 0.5) {
+      sprayParticles.push(createSprayParticle());
+    // }
+  }
+
+  for(const sprayParticle of sprayParticles) {
+    sprayParticle.object.position.x += 0.03 * sprayParticle.moveVector.x;
+    sprayParticle.object.position.y += 0.03 * sprayParticle.moveVector.y;
+    sprayParticle.object.position.z += 0.03 * sprayParticle.moveVector.z;
+    sprayParticle.object.scale.x += 0.006;
+    sprayParticle.object.scale.y += 0.006;
+    sprayParticle.object.scale.z += 0.006;
+    sprayParticle.live -= 0.03;
+    sprayParticle.object.material.opacity = Math.min(1, Math.max(0, sprayParticle.live * sprayParticle.live));
+
+    if(sprayParticle.live <= 0) { scene.remove(sprayParticle.object); };
+  }
+
   renderer.render(scene, camera);
 });
+
