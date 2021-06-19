@@ -33,6 +33,18 @@ const oculusModel = controllerModelFactory.createControllerModel(controllerGripW
 controllerGripWheel.add(oculusModel);
 scene.add(controllerGripWheel);
 
+const listener = new THREE.AudioListener();
+camera.add(listener);
+
+const sound = new THREE.Audio(listener);
+const audioLoader = new THREE.AudioLoader();
+
+audioLoader.load('/assets/spray.ogg', function (buffer) {
+  sound.setVolume(0.7);
+  sound.setLoop(true);
+  sound.setBuffer(buffer);
+});
+
 const gltfLoader = new GLTFLoader().setPath('/assets/can/');
 gltfLoader.load('scene.gltf', (gltf) => {
   const model = gltf.scene;
@@ -100,10 +112,10 @@ const controller = renderer.xr.getController(1);
 controller.addEventListener('squeezestart', () => (moving = true));
 controller.addEventListener('squeezeend', () => (moving = false));
 controller.addEventListener('selectstart', () => {
-  spraySfx.play();
+  sound.play();
 });
 controller.addEventListener('selectend', () => {
-  spraySfx.pause();
+  sound.stop();
 });
 
 controllerGripCan.addEventListener('connected', e => {
