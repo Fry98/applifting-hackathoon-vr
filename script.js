@@ -126,6 +126,19 @@ controller.addEventListener('squeezeend', () => (moving = false));
 const fog = new THREE.Fog('#c2bbac', 8, 16);
 scene.fog = fog;
 
+// spray particles
+const sprayParticleTex = textureLoader.load('/assets/cloud.png');
+const sprayMaterial = new THREE.SpriteMaterial({map: sprayParticleTex});
+
+
+const sprayParticle = new THREE.Sprite(sprayMaterial);
+scene.add(sprayParticle);
+sprayParticle.position.x = controllerCan.position.x;
+sprayParticle.position.y = controllerCan.position.y;
+sprayParticle.position.z = controllerCan.position.z;
+
+
+
 // add cloud
 function initCloud(y) {
   const cloudGeometry = new THREE.PlaneGeometry(1, 1);
@@ -187,6 +200,10 @@ renderer.setAnimationLoop(() => {
       cloud.cloud.position.x -= spawnDistance * 2;
     }
   } 
+
+  sprayParticle.position.x = controllerCan.position.x;
+  sprayParticle.position.y = controllerCan.position.y;
+  sprayParticle.position.z = controllerCan.position.z;
 
   renderer.render(scene, camera);
 });
