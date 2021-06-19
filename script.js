@@ -1,5 +1,6 @@
 const WALL_POSITION = 10;
 const WALL_HEIGHT = 5;
+const CLOUDS = true;
 
 import * as THREE from 'https://cdn.skypack.dev/three@latest';
 import { VRButton } from 'https://cdn.skypack.dev/three@latest/examples/jsm/webxr/VRButton.js';
@@ -116,6 +117,41 @@ controller.addEventListener('squeezeend', () => (moving = false));
 const fog = new THREE.Fog('#c2bbac', 8, 16);
 scene.fog = fog;
 
+// add cloud
+function initCloud(y) {
+  const cloudGeometry = new THREE.PlaneGeometry(1, 1);
+
+  const cloudTex = textureLoader.load('/assets/cloud.png');
+  cloudTex.repeat.set(1, 1);
+  const cloudMaterial = new THREE.MeshBasicMaterial({ map: cloudTex, transparent: true, depthWrite: false /* important for overlaying meshes */ });
+  const cloud = new THREE.Mesh(cloudGeometry, cloudMaterial);
+  cloud.position.y = 40 + y * 1.5;
+  cloud.rotation.y = Math.random() * Math.PI;
+  const spread = 150;
+  cloud.position.x = Math.random() * spread - Math.random() * spread;
+  cloud.position.z = Math.random() * spread - Math.random() * spread;
+  cloud.rotateX(Math.PI / 2);
+  cloud.scale.x = 30 + y * 1.5;
+  cloud.scale.y = 30 + y * 1.5;
+  const rotationDelta = Math.random();
+  return {cloud, y, rotationDelta};
+}
+
+function initClouds(numberOfClouds) {
+  // init number of clouds 
+  const clouds = [];
+  for(let i = 0; i < numberOfClouds; i++) {
+    clouds.push(initCloud(i));
+    scene.add(clouds[i].cloud);
+  }
+  return clouds;
+}
+
+let clouds = [];
+if(CLOUDS) {
+  clouds = initClouds(30);
+}
+
 renderer.setAnimationLoop(() => {
   if (moving) {
     const dirVec = new THREE.Vector3(0.0, 0.0, -1.0);
@@ -127,5 +163,21 @@ renderer.setAnimationLoop(() => {
   }
 
   camera.rotation.y += 0.004;
+
+  // the boundary after which clouds should respawn
+  const spawnDistance = 100; 
+
+  // move clouds
+  for(const cloud of clouds) {
+    if(cloud.cloud.position.x < spawnDistance) {
+      cloud.cloud.position.x += 0.001 * (cloud.y - 10);
+      // seamlessly transition from opacity 0 to opacity 1 and back to 0 when clouds are moving from spawnpoint to despawnpoint
+      cloud.cloud.material.opacity = Math.cos(Math.PI * (1/(spawnDistance*2/cloud.cloud.position.x))); 
+      cloud.cloud.rotation.z += 0.0003 * cloud.rotationDelta;
+    } else {
+      cloud.cloud.position.x -= spawnDistance * 2;
+    }
+  } 
+
   renderer.render(scene, camera);
 });
