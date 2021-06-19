@@ -1,5 +1,5 @@
 const WALL_POSITION = 10;
-const WALL_HEIGHT = 4;
+const WALL_HEIGHT = 5;
 
 import * as THREE from 'https://cdn.skypack.dev/three@latest';
 import { VRButton } from 'https://cdn.skypack.dev/three@latest/examples/jsm/webxr/VRButton.js';
@@ -19,40 +19,25 @@ renderer.xr.enabled = true;
 document.body.appendChild(VRButton.createButton(renderer));
 
 const controllerModelFactory = new XRControllerModelFactory();
-const controllerGrip1 = renderer.xr.getControllerGrip(0);
-const controllerGrip2 = renderer.xr.getControllerGrip(1);
+const controllerGripWheel = renderer.xr.getControllerGrip(0);
+const controllerGripCan = renderer.xr.getControllerGrip(1);
 
-const model1 = controllerModelFactory.createControllerModel(controllerGrip1);
-// sprayer
-{
-  const gltfLoader = new GLTFLoader();
-  gltfLoader.load('/assets/can.glb', (gltf) => {
-    const model = gltf.scene;
-    const size = 0.05;
-    model.scale.set(size, size, size);
-    model1.add(model);
-  });
-}
-controllerGrip1.add(model1);
-scene.add(controllerGrip1);
+const oculusModel = controllerModelFactory.createControllerModel(controllerGripWheel);
+controllerGripWheel.add(oculusModel);
+scene.add(controllerGripWheel);
 
-// const model1 = controllerModelFactory.createControllerModel(controllerGrip1);
-// controllerGrip1.add(model1);
-// scene.add(controllerGrip1);
-// // sprayer
-// {
-//   const gltfLoader = new GLTFLoader();
-//   gltfLoader.load('/assets/can.glb', (gltf) => {
-//     const model = gltf.scene;
-//     const size = 0.05;
-//     model.scale.set(size, size, size);
-//     scene.add(model);
-//   });
-// }
+const gltfLoader = new GLTFLoader().setPath('/assets/can/');
+gltfLoader.load('scene.gltf', (gltf) => {
+  const model = gltf.scene;
+  const size = 0.04;
+  model.rotateX(-Math.PI / 2);
+  model.rotateY(Math.PI / 2);
+  model.translateY(-0.1);
+  model.scale.set(size, size, size);
+  controllerGripCan.add(model);
+});
 
-const model2 = controllerModelFactory.createControllerModel(controllerGrip2);
-controllerGrip2.add(model2);
-scene.add(controllerGrip2);
+scene.add(controllerGripCan);
 
 const loader = new THREE.CubeTextureLoader();
 const texture = loader.load([
@@ -65,23 +50,22 @@ const texture = loader.load([
 ]);
 scene.background = texture;
 
-// const light = new THREE.AmbientLight(0x404040);
-// scene.add(light);
-
-// const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0);
-// directionalLight.position.z = 1;
-// scene.add(directionalLight);
+const light = new THREE.AmbientLight(0xffffff);
+scene.add(light);
 
 const dolly = new THREE.Object3D();
 dolly.add(camera);
+dolly.add(controllerGripWheel);
+dolly.add(controllerGripCan);
 scene.add(dolly);
 
 // prison walls
 const textureLoader = new THREE.TextureLoader();
 const wallGeometry = new THREE.PlaneGeometry(WALL_POSITION, WALL_HEIGHT);
 const floorGeometry = new THREE.PlaneGeometry(40, 40);
-const wallTex = textureLoader.load('/assets/wall2.jpg');
-wallTex.repeat.set(5, 3);
+const wallTex = textureLoader.load('/assets/wall.jpeg');
+
+wallTex.repeat.set(4, 2);
 wallTex.wrapS = THREE.RepeatWrapping;
 wallTex.wrapT = THREE.RepeatWrapping;
 
@@ -105,13 +89,43 @@ wallTex.wrapT = THREE.RepeatWrapping;
   scene.add(wallBack);
 }
 
+// const listener = new THREE.AudioListener();
+// camera.add(listener);
+// const sound = new THREE.Audio(listener);
+// const audioLoader = new THREE.AudioLoader();
+// audioLoader.load('/assets/sounds/spray.mp3', function (buffer) {
+//   sound.setBuffer(buffer);
+// });
+//
+// const controllerCan = renderer.xr.getController(1);
+// controllerCan.addEventListener('squeezestart', () => (moving = true));
+// controllerCan.addEventListener('squeezeend', () => (moving = false));
+// controllerCan.addEventListener('selectstart', () => {
+//   sound.setLoop(true);
+//   sound.setVolume(0.5);
+//   sound.play();
+// });
+// controllerCan.addEventListener('selectend', () => {
+//   sound.setLoop(false);
+// });
+
+const controller = renderer.xr.getController(1);
+controller.addEventListener('squeezestart', () => (moving = true));
+controller.addEventListener('squeezeend', () => (moving = false));
+
 const fog = new THREE.Fog('#c2bbac', 8, 16);
 scene.fog = fog;
 
-renderer.xr.getController(0).addEventListener('squeezestart', () => (moving = true));
-renderer.xr.getController(0).addEventListener('squeezeend', () => (moving = false));
-
 renderer.setAnimationLoop(() => {
+  if (moving) {
+    const dirVec = new THREE.Vector3(0.0, 0.0, -1.0);
+    dirVec.applyQuaternion(controller.quaternion);
+    const mvVec = new THREE.Vector2(dirVec.x, dirVec.z);
+    mvVec.normalize();
+    dolly.position.x += mvVec.x * 0.03;
+    dolly.position.z += mvVec.y * 0.03;
+  }
+
   camera.rotation.y += 0.004;
   renderer.render(scene, camera);
 });
