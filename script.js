@@ -127,12 +127,12 @@ const fog = new THREE.Fog('#c2bbac', 8, 16);
 scene.fog = fog;
 
 // add cloud
-function initCloud(y) {
-  const cloudGeometry = new THREE.PlaneGeometry(1, 1);
+const cloudGeometry = new THREE.PlaneGeometry(1, 1);
+const cloudTex = textureLoader.load('/assets/cloud.png');
+cloudTex.repeat.set(1, 1);
+const cloudMaterial = new THREE.MeshBasicMaterial({ map: cloudTex, transparent: true, depthWrite: false /* important for overlaying meshes */ });
 
-  const cloudTex = textureLoader.load('/assets/cloud.png');
-  cloudTex.repeat.set(1, 1);
-  const cloudMaterial = new THREE.MeshBasicMaterial({ map: cloudTex, transparent: true, depthWrite: false /* important for overlaying meshes */ });
+function initCloud(y) {
   const cloud = new THREE.Mesh(cloudGeometry, cloudMaterial);
   cloud.position.y = 40 + y * 1.5;
   cloud.rotation.y = Math.random() * Math.PI;
