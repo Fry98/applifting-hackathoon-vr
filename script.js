@@ -9,6 +9,7 @@ import { VRButton } from 'https://cdn.skypack.dev/three@latest/examples/jsm/webx
 import { XRControllerModelFactory } from 'https://cdn.skypack.dev/three@latest/examples/jsm/webxr/XRControllerModelFactory.js';
 import { GLTFLoader } from 'https://cdn.skypack.dev/three@latest/examples/jsm/loaders/GLTFLoader.js';
 
+let spraying = false;
 let moving = false;
 let gamepad = null;
 
@@ -113,9 +114,11 @@ controller.addEventListener('squeezestart', () => (moving = true));
 controller.addEventListener('squeezeend', () => (moving = false));
 controller.addEventListener('selectstart', () => {
   sound.play();
+  spraying = true;
 });
 controller.addEventListener('selectend', () => {
   sound.stop();
+  spraying = false;
 });
 
 controllerGripCan.addEventListener('connected', e => {
@@ -126,37 +129,45 @@ controllerGripCan.addEventListener('connected', e => {
 const fog = new THREE.Fog('#c2bbac', 5, 25);
 scene.fog = fog;
 
-// // spray particles
-// const sprayParticleTex = textureLoader.load('/assets/cloud.png');
+// spray particles
+const sprayParticleTex = textureLoader.load('/assets/cloud.png');
 
-// const sprayParticles = [];
-// function createSprayParticle() {
-//   const sprayMaterial = new THREE.SpriteMaterial({map: sprayParticleTex, transparent: true, opacity: 1});
-//   const sprayParticle = new THREE.Sprite(sprayMaterial);
-//   sprayParticle.position.x = dolly.position.x + controllerCan.position.x;
-//   sprayParticle.position.y = dolly.position.y + controllerCan.position.y;
-//   sprayParticle.position.z = dolly.position.z + controllerCan.position.z;
-//   const initScale = 0.01;
-//   sprayParticle.scale.x = initScale;
-//   sprayParticle.scale.y = initScale;
-//   sprayParticle.scale.x = initScale;
-//   sprayParticle.material.rotation = Math.PI * Math.random();
-//   scene.add(sprayParticle);
+const sprayParticles = [];
+function createSprayParticle() {
+  const sprayMaterial = new THREE.SpriteMaterial({map: sprayParticleTex, transparent: true, opacity: 1});
+  const sprayParticle = new THREE.Sprite(sprayMaterial);
+  sprayParticle.position.x = dolly.position.x + controller.position.x;
+  sprayParticle.position.y = dolly.position.y + controller.position.y;
+  sprayParticle.position.z = dolly.position.z + controller.position.z;
+  const initScale = 0.01;
+  sprayParticle.scale.x = initScale;
+  sprayParticle.scale.y = initScale;
+  sprayParticle.scale.x = initScale;
+  sprayParticle.material.rotation = Math.PI * Math.random();
+  scene.add(sprayParticle);
 
-//   const moveVector = new THREE.Vector3(1,1,-1);
-//   moveVector.applyQuaternion(controllerCan.quaternion);
-//   moveVector.normalize();
-//   return {object: sprayParticle, live: 1, moveVector }
-// }
+  const target = new THREE.Vector3();
+  controller.getWorldDirection(target);
+  target.multiplyScalar(-1);
 
-// // test
-// createSprayParticle();
+  const upVec = new THREE.Vector3(0, 1, 0);
+  upVec.applyQuaternion(controller.quaternion);
+  target.addScaledVector(upVec, -0.8);
+
+  sprayParticle.position.x += upVec.x * 0.1;
+  sprayParticle.position.y += upVec.y * 0.1;
+  sprayParticle.position.z += upVec.z * 0.1;
+
+  return {object: sprayParticle, live: 1, moveVector: target }
+}
 
 // add cloud
 const cloudGeometry = new THREE.PlaneGeometry(1, 1);
 const cloudTex = textureLoader.load('/assets/cloud.png');
 cloudTex.repeat.set(1, 1);
-const cloudMaterial = new THREE.MeshBasicMaterial({ map: cloudTex, transparent: true, depthWrite: false /* important for overlaying meshes */ });
+const cloudMaterial = new THREE.MeshBasicMaterial({
+  map: cloudTex, transparent: true, depthWrite: false
+});
 
 function initCloud(y) {
   const cloud = new THREE.Mesh(cloudGeometry, cloudMaterial);
@@ -199,8 +210,8 @@ renderer.setAnimationLoop(() => {
     moveVec.addScaledVector(new THREE.Vector3(-VEC_FWD.z, 0, VEC_FWD.x), -target.x);
     moveVec.normalize();
 
-    dolly.position.x += 0.03 * moveVec.x;
-    dolly.position.z += 0.03 * moveVec.z;
+    dolly.position.x += 0.02 * moveVec.x;
+    dolly.position.z += 0.02 * moveVec.z;
   }
 
   if (gamepad) {
@@ -226,24 +237,22 @@ renderer.setAnimationLoop(() => {
     }
   }
 
-  // if(spraying) {
-  //   // if(Math.random() < 0.5) {
-  //     sprayParticles.push(createSprayParticle());
-  //   // }
-  // }
+  if(spraying) {
+    sprayParticles.push(createSprayParticle());
+  }
 
-  // for(const sprayParticle of sprayParticles) {
-  //   sprayParticle.object.position.x += 0.03 * sprayParticle.moveVector.x;
-  //   sprayParticle.object.position.y += 0.03 * sprayParticle.moveVector.y;
-  //   sprayParticle.object.position.z += 0.03 * sprayParticle.moveVector.z;
-  //   sprayParticle.object.scale.x += 0.006;
-  //   sprayParticle.object.scale.y += 0.006;
-  //   sprayParticle.object.scale.z += 0.006;
-  //   sprayParticle.live -= 0.03;
-  //   sprayParticle.object.material.opacity = Math.min(1, Math.max(0, sprayParticle.live * sprayParticle.live));
+  for(const sprayParticle of sprayParticles) {
+    sprayParticle.object.position.x += (0.03 * sprayParticle.moveVector.x);
+    sprayParticle.object.position.y += (0.03 * sprayParticle.moveVector.y);
+    sprayParticle.object.position.z += (0.03 * sprayParticle.moveVector.z);
+    sprayParticle.object.scale.x += 0.006;
+    sprayParticle.object.scale.y += 0.006;
+    sprayParticle.object.scale.z += 0.006;
+    sprayParticle.live -= 0.03;
+    sprayParticle.object.material.opacity = Math.min(1, Math.max(0, sprayParticle.live * sprayParticle.live));
 
-  //   if(sprayParticle.live <= 0) { scene.remove(sprayParticle.object); };
-  // }
+    if(sprayParticle.live <= 0) { scene.remove(sprayParticle.object); };
+  }
 
   renderer.render(scene, camera);
 });
