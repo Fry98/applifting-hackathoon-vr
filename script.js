@@ -125,22 +125,23 @@ function initCloud(y) {
   cloudTex.repeat.set(1, 1);
   const cloudMaterial = new THREE.MeshBasicMaterial({ map: cloudTex, transparent: true, depthWrite: false /* important for overlaying meshes */ });
   const cloud = new THREE.Mesh(cloudGeometry, cloudMaterial);
-  cloud.position.y = 40 + y;
+  cloud.position.y = 40 + y * 1.5;
   cloud.rotation.y = Math.random() * Math.PI;
-  const spread = 120;
+  const spread = 150;
   cloud.position.x = Math.random() * spread - Math.random() * spread;
   cloud.position.z = Math.random() * spread - Math.random() * spread;
   cloud.rotateX(Math.PI / 2);
-  cloud.scale.x = 15 + y;
-  cloud.scale.y = 15 + y;
-  return {cloud, y};
+  cloud.scale.x = 30 + y * 1.5;
+  cloud.scale.y = 30 + y * 1.5;
+  const rotationDelta = Math.random();
+  return {cloud, y, rotationDelta};
 }
 
 function initClouds(numberOfClouds) {
   // init number of clouds 
   const clouds = [];
   for(let i = 0; i < numberOfClouds; i++) {
-    clouds.push(initCloud(30 - i));
+    clouds.push(initCloud(i));
     scene.add(clouds[i].cloud);
   }
   return clouds;
@@ -172,7 +173,7 @@ renderer.setAnimationLoop(() => {
       cloud.cloud.position.x += 0.001 * (cloud.y - 10);
       // seamlessly transition from opacity 0 to opacity 1 and back to 0 when clouds are moving from spawnpoint to despawnpoint
       cloud.cloud.material.opacity = Math.cos(Math.PI * (1/(spawnDistance*2/cloud.cloud.position.x))); 
-      cloud.cloud.rotation.z += 0.0003;
+      cloud.cloud.rotation.z += 0.0003 * cloud.rotationDelta;
     } else {
       cloud.cloud.position.x -= spawnDistance * 2;
     }
