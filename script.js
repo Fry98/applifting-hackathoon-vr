@@ -9,6 +9,7 @@ import { VRButton } from 'https://cdn.skypack.dev/three@latest/examples/jsm/webx
 import { XRControllerModelFactory } from 'https://cdn.skypack.dev/three@latest/examples/jsm/webxr/XRControllerModelFactory.js';
 import { GLTFLoader } from 'https://cdn.skypack.dev/three@latest/examples/jsm/loaders/GLTFLoader.js';
 
+let dollyAngle = 0;
 let spraying = false;
 let moving = false;
 let gamepad = null;
@@ -136,9 +137,10 @@ const sprayParticles = [];
 function createSprayParticle() {
   const sprayMaterial = new THREE.SpriteMaterial({map: sprayParticleTex, transparent: true, opacity: 1});
   const sprayParticle = new THREE.Sprite(sprayMaterial);
-  sprayParticle.position.x = dolly.position.x + controller.position.x;
-  sprayParticle.position.y = dolly.position.y + controller.position.y;
-  sprayParticle.position.z = dolly.position.z + controller.position.z;
+  sprayParticle.position.x = controller.position.x;
+  sprayParticle.position.y = controller.position.y;
+  sprayParticle.position.z = controller.position.z;
+
   const initScale = 0.01;
   sprayParticle.scale.x = initScale;
   sprayParticle.scale.y = initScale;
@@ -153,12 +155,21 @@ function createSprayParticle() {
   const upVec = new THREE.Vector3(0, 1, 0);
   upVec.applyQuaternion(controller.quaternion);
   target.addScaledVector(upVec, -0.8);
+  sprayParticle.position.addScaledVector(upVec, 0.1);
 
-  sprayParticle.position.x += upVec.x * 0.1;
-  sprayParticle.position.y += upVec.y * 0.1;
-  sprayParticle.position.z += upVec.z * 0.1;
+  const leftVec = new THREE.Vector3(-1, 0, 0);
+  leftVec.applyQuaternion(controller.quaternion);
+  sprayParticle.position.addScaledVector(leftVec, 0.01);
 
-  return {object: sprayParticle, live: 1, moveVector: target }
+  const fwdVec = new THREE.Vector3(0, 0, -1);
+  fwdVec.applyQuaternion(controller.quaternion);
+  sprayParticle.position.addScaledVector(fwdVec, 0.01);
+
+  target.applyAxisAngle(VEC_UP, dollyAngle);
+  sprayParticle.position.applyAxisAngle(VEC_UP, dollyAngle);
+  sprayParticle.position.add(dolly.position);
+
+  return { object: sprayParticle, live: 1, moveVector: target };
 }
 
 // add cloud
@@ -216,6 +227,7 @@ renderer.setAnimationLoop(() => {
 
   if (gamepad) {
     const angle = -gamepad.axes[2] * 0.02;
+    dollyAngle += angle;
     dolly.rotateY(angle);
     VEC_FWD.applyAxisAngle(VEC_UP, angle);
   }
